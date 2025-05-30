@@ -1,47 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import peopleServices from './services/people'
+import People from './components/People'
+import PersonForm from './components/PersonForm'
+import Filter from './components/Filter'
+import people from './services/people'
 
-const People = ({persons, filter}) => {
-  
-  if (filter === ''){
-    return(
-      persons.map(person => 
-        <p key={person.name}>{person.name} {person.number}</p>
-      )
-    )
-  }else{
-    return(
-      persons.filter(person => person.name.toLowerCase().includes(filter.toLowerCase())).map(person => 
-        <p key={person.name}>{person.name} {person.number}</p>
-      )
-    )
-  }
-}
-
-const PersonForm = ({addNumber, handleNameChange, handleNumberChange}) => {
-  return(
-    <form onSubmit={addNumber}>
-        <div>name: <input onChange={handleNameChange}/></div>
-        <div>number: <input onChange={handleNumberChange}/></div>
-        <div><button type="submit">add</button></div>
-      </form>
-  )
-}
-
-const Filter = ({handleFilter}) => {
-  return(
-    <div>
-        filter shown with<input onChange={handleFilter}/>
-    </div>
-  )
-} 
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456' },
-    { name: 'Ada Lovelace', number: '39-44-5323523' },
-    { name: 'Dan Abramov', number: '12-43-234345' },
-    { name: 'Mary Poppendieck', number: '39-23-6423122' }
-  ])
+  const [persons, setPersons] = useState([])
 
   const [newName, setNewName] = useState('')
 
@@ -49,13 +15,37 @@ const App = () => {
 
   const [filter, setFilter] = useState('')
 
+  useEffect(() => {
+    console.log('effect')
+    peopleServices
+      .getAll()
+      .then(initPersons => {
+        setPersons(initPersons)
+      })
+  }, [])
+
   const addNumber = (event) => {
     event.preventDefault()
-    
+    const newObject = {name: newName, number: newNumber}
+
     if(persons.map(person => person.name).includes(newName)){
-      window.alert(`${newName} is already added to phonebook`)
+      const existing = persons.find(p => p.name === newName)
+      if(window.confirm(`${newName} is already in the phonebook.\nDo you want change their number?`)){
+        peopleServices
+          .changeNumber(existing.id, newObject)
+          .then(newPerson => {
+            setPersons(persons.map(p => p.id !== newPerson.id ? p : newPerson))
+          })      
+      }
+
     }else{
-      setPersons(persons.concat({name: newName, number: newNumber}))
+      peopleServices
+        .create(newObject)
+        .then(newPerson => {
+          setPersons(persons.concat(newPerson))
+          setNewName('')
+          setNewNumber('')
+        })
     }
   }
 
@@ -70,6 +60,17 @@ const App = () => {
   const handleFilter = (event) => {
     setFilter(event.target.value)
   }
+  const handleDelete = id => {
+    const person = persons.find(p => p.id === id)
+    const check = window.confirm(`Delete ${person.name}`)
+    if(check){
+      peopleServices
+        .deletePerson(person.id)
+        .then(response => {
+          setPersons(persons.filter(p => p.id !== id))
+        })
+    }
+  }
 
   return (
     <div>
@@ -78,7 +79,11 @@ const App = () => {
       <h3>Add new</h3>
       <PersonForm handleNameChange={handleNameChange}handleNumberChange={handleNumberChange} addNumber={addNumber}/>
       <h2>Numbers</h2>
-      <People persons={persons} filter={filter}/>
+      <People 
+        persons={persons} 
+        filter={filter} 
+        onClick={handleDelete}
+      />
     </div>
   )
 
