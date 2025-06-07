@@ -49,6 +49,11 @@
       "id": "e69a",
       "content": "a new note...",
       "important": false
+    },
+    {
+      "id": "bd44",
+      "content": "Bingus",
+      "important": true
     }
   ]
 }

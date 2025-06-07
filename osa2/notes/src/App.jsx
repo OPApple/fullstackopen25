@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import Note from './components/Note'
+import Footer from './components/Footer'
+import Notification from './components/Notification'
 import noteService from './services/notes'
 
 const App = () => {
-  const [notes, setNotes] = useState([])
+  const [notes, setNotes] = useState(null)
   const [newNote, setNewNote] = useState('a new note...')
+
+  const [errorMessage, setErrorMessage] = useState('some error...')
+
 
   useEffect(() => {
     noteService
@@ -40,8 +44,8 @@ const App = () => {
         setNotes(notes.map(note => note.id !== id ? note : returnedNote))
       })
       .catch(error => {
-        alert(
-          `the note '${note.content}' was already deleted from server`
+        setErrorMessage(
+          `Note '${note.content}' was already removed from server`
         )
         setNotes(notes.filter(n=> n.id !== id))
       })
@@ -55,6 +59,7 @@ const App = () => {
   return (
     <div>
       <h1>Notes</h1>
+      <Notification message={errorMessage}/>
       <ul>
         {notes.map((note) => (
           <Note 
@@ -67,6 +72,7 @@ const App = () => {
         <input value={newNote} onChange={handleNoteChange} />
         <button type="submit">save</button>
       </form>
+      <Footer/>
     </div>
   )
 }
