@@ -4,8 +4,9 @@ import Footer from './components/Footer'
 import Notification from './components/Notification'
 import noteService from './services/notes'
 
+
 const App = () => {
-  const [notes, setNotes] = useState(null)
+  const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('a new note...')
 
   const [errorMessage, setErrorMessage] = useState('some error...')
