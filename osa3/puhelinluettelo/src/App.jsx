@@ -17,6 +17,8 @@ const App = () => {
 
   const [notificationMessage, setNotificationMessage] = useState(null)
 
+  const [badNotification, setBadNotification] = useState(false)
+
   useEffect(() => {
     console.log('effect')
     peopleServices
@@ -46,10 +48,13 @@ const App = () => {
             setNewName('')
             setNewNumber('')
             setNotificationMessage(`Number of ${newName} changed`)
+            setBadNotification(false)
             resetNotification(3000)
           })
           .catch(error => {
-            setNotificationMessage(`Information of ${newName} is already removed from the server`)
+            console.log(error.response.data)
+            setNotificationMessage(error.response.data.error)
+            setBadNotification(true)
             resetNotification(5000)
           })
       }
@@ -62,7 +67,14 @@ const App = () => {
           setNewName('')
           setNewNumber('')
           setNotificationMessage(`Added ${newPerson.name}`)
+          setBadNotification(false)
           resetNotification(3000)
+        })
+        .catch(error => {
+          console.log(error.response.data)
+          setNotificationMessage(error.response.data.error)
+          setBadNotification(true)
+          resetNotification(5000)
         })
     }
   }
@@ -86,6 +98,7 @@ const App = () => {
         .deletePerson(person.id)
         .then(response => {
           setPersons(persons.filter(p => p.id !== id))
+          setBadNotification(true)
           setNotificationMessage(`${person.name} deleted`)
           resetNotification(3000)
         })
@@ -98,7 +111,7 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter handleFilter={handleFilter}/>
       <h3>Add new</h3>
-      <Notification message={notificationMessage}/>
+      <Notification message={notificationMessage} isBad={badNotification}/>
       <PersonForm handleNameChange={handleNameChange}handleNumberChange={handleNumberChange} addNumber={addNumber}/>
       <h2>Numbers</h2>
       <People 

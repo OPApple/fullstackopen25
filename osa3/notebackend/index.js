@@ -26,8 +26,8 @@ app.get('/api/notes', (request, response) => {
   })
 })
 
-app.get('/api/notes/:id', (request, response) => {
-  Note.findById(requesst.params.id)
+app.get('/api/notes/:id', (request, response, next) => {
+  Note.findById(request.params.id)
     .then(note => {
       if(note){
         response.json(note)
@@ -38,13 +38,7 @@ app.get('/api/notes/:id', (request, response) => {
     .catch(error => next(error))
 })
 
-const generateId = () => {
-  const maxId =
-    notes.length > 0 ? Math.max(...notes.map((n) => Number(n.id))) : 0
-  return String(maxId + 1)
-}
-
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
   const body = request.body
 
   if (!body.content) {
@@ -60,14 +54,17 @@ app.post('/api/notes', (request, response) => {
 
   note.save()
     .then(result => {
+      console.log(result)
       response.json(note)
     })
+    .catch(error => next(error))
 
 })
 
 app.delete('/api/notes/:id', (request, response, next) => {
   Note.findByIdAndDelete(request.params.id)
     .then(result => {
+      console.log(result)
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -77,7 +74,7 @@ app.put('api/notes/:id', (request, response, next) => {
   const { content, important } = request.body
   Note.findById(request.params.id)
     .then(note => {
-      if(!ntoe){
+      if(!note){
         return response.status(404).end()
       }
 
@@ -102,6 +99,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
+  }else if (error.name === 'ValidationError'){
+    return response.status(400).json({ error: error.message })
   }
 
   next(error)

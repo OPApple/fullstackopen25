@@ -1,8 +1,8 @@
-const Notification = ({ message }) => {
+const Notification = ({ message, isBad }) => {
     if (message === null) {
       return null
     }
-    else if (message.includes('deleted') || message.includes('removed')){
+    else if (isBad){
       return(
         <div className="delete">
           {message}
