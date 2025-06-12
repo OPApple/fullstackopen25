@@ -1,22 +1,21 @@
 {
-  "name": "notebackend",
-  "version": "1.0.0",
+  "name": "blogilista-backend",
+  "version": "0.0.1",
   "main": "index.js",
   "scripts": {
+    "test": "node --test",
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "test": "node --test",
-    "build:ui": "rm -rf dist && cd ../../osa2/notes && npm run build && cp -r dist ../../osa3/notebackend",
-    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push",
     "lint": "eslint ."
   },
-  "author": "Olli Kankuri",
+  "author": "opa",
   "license": "MIT",
   "description": "",
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "mongoose": "^8.15.1"
+    "mongoose": "^8.15.1",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
