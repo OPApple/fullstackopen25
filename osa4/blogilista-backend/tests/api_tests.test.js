@@ -1,0 +1,172 @@
+const { test, after, beforeEach, describe } = require('node:test')
+const mongoose = require('mongoose')
+const supertest = require('supertest')
+const assert = require('node:assert')
+const app = require('../app')
+const Blog = require('../models/blog')
+const helper = require('./test_helper')
+
+const api = supertest(app)
+
+
+describe('with initial blogs saved', () => {
+
+    beforeEach(async () => {
+        await Blog.deleteMany({})
+
+        const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+        const promiseArr = blogObjects.map(blog => blog.save())
+
+        await Promise.all(promiseArr)
+    })
+
+    test('blogs are returned as json', async () => {
+        await api
+            .get('/api/blogs')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
+
+    test('all blogs are returned', async () => {
+        const response = await api.get('/api/blogs')
+
+        assert.strictEqual(response.body.length, helper.initialBlogs.length)
+    })
+
+    test('a specific blog should be returned with all blogs', async () => {
+        const response = await api.get('/api/blogs')
+
+        const titles = response.body.map(e => e.title)
+        assert(titles.includes('Reasons I deserve to pull 4* tsukasa'))
+    })
+
+    test('identifier for blogs should be id', async () => {
+        const response = await api.get('/api/blogs')
+
+        assert(
+            response.body.every(blog => {
+                return Object.keys(blog).includes('id')
+            })
+        )
+    })
+
+    describe('Adding new blogs ', () => {
+
+        test('new blogs can be added ', async () => {
+            const newBlog = {
+                title: 'Lucio x Miku collab is coming next season',
+                author: 'A-Aron',
+                url: 'www.overwatch.blizzard.com',
+                likes: 999999999
+            }
+
+            await api
+                .post('/api/blogs')
+                .send(newBlog)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            const response = await api.get('/api/blogs')
+
+            const titles = response.body.map(b => b.title)
+
+            const newBlogLikes = response.body
+                .find(b => b.title === 'Lucio x Miku collab is coming next season').likes
+
+            assert.strictEqual(response.body.length, helper.initialBlogs.length + 1)
+            assert(titles.includes('Lucio x Miku collab is coming next season'))
+            assert.strictEqual(newBlogLikes, 999999999)
+        })
+
+        test('likes should be set to 0 if left undefined', async () => {
+            const newBlog = {
+                title: 'Lucio x Miku collab is coming next season',
+                author: 'A-Aron',
+                url: 'www.overwatch.blizzard.com'
+            }
+
+            await api
+                .post('/api/blogs')
+                .send(newBlog)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            const response = await api.get('/api/blogs')
+
+            const newBlogLikes = response.body
+                .find(b => b.title === 'Lucio x Miku collab is coming next season').likes
+
+            assert.strictEqual(newBlogLikes, 0)
+        })
+
+        test('blogs with no title should not be added', async () => {
+            const newBlog = {
+                author: 'Oskari Olematon',
+                url: 'nollkatu.nolla.com',
+                likes: 29
+            }
+
+            await api
+                .post('/api/blogs')
+                .send(newBlog)
+                .expect(400)
+        })
+
+        test('blogs with no url should not be added ', async () => {
+            const newBlog = {
+                title: 'Is anything real?',
+                author: 'Oskari Olematon',
+                likes: 29
+            }
+
+            await api
+                .post('/api/blogs')
+                .send(newBlog)
+                .expect(400)
+        })
+    })
+
+    describe('Deleting blogs', () => {
+        test('Should delete blog with valid id', async () => {
+            const blogs = await helper.blogsInDb()
+            const blogToBeDeleted = blogs[0]
+
+            await api
+                .delete(`/api/blogs/${blogToBeDeleted.id}`)
+                .expect(204)
+
+            const newBlogs = await helper.blogsInDb()
+            const titles = newBlogs.map(b => b.title)
+
+            assert(!titles.includes(blogToBeDeleted.title))
+            assert.strictEqual(newBlogs.length, helper.initialBlogs.length - 1)
+        })
+    })
+
+    describe('Editing blogs', () => {
+        test('Should edit blog with a valid id and return 200', async () => {
+            const blogs = await helper.blogsInDb()
+            const blogToBeUpdated = blogs[0]
+
+            const updatedBlog = {
+                ...blogToBeUpdated,
+                likes: 3141
+            }
+
+            await api
+                .put(`/api/blogs/${blogToBeUpdated.id}`)
+                .send(updatedBlog)
+                .expect(200)
+
+            const newBlogs = await helper.blogsInDb()
+            const editedBlog = newBlogs.find(b => b.id === blogToBeUpdated.id)
+
+            assert.strictEqual(editedBlog.title, blogToBeUpdated.title)
+            assert.strictEqual(editedBlog.likes, 3141)
+        })
+    })
+
+})
+after(async () => {
+    await mongoose.connection.close()
+})

@@ -1,3 +1,4 @@
+require('express-async-errors')
 const express = require('express')
 const mongoose = require('mongoose')
 const config = require('./utils/config')
@@ -9,7 +10,7 @@ const app = express()
 
 const url = config.MONGODB_URI
 
-console.log('connecting to ', url)
+logger.info('connecting to ', url)
 mongoose.connect(url)
     .then(() => {
         logger.info('connected to mongo')

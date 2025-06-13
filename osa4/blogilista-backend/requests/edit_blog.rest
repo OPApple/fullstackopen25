@@ -1,0 +1,9 @@
+PUT http://localhost:3001/api/blogs/68495da4fa30cfe60154baab
+Content-Type: application/json
+
+{
+    "title": "I wanna play ffxiv so baad man",
+    "author": "Minä",
+    "url": "www.moogle.com",
+    "likes": 99
+}
