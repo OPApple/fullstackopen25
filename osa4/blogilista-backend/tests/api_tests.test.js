@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt')
 const { test, after, beforeEach, describe } = require('node:test')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
@@ -5,6 +6,7 @@ const assert = require('node:assert')
 const app = require('../app')
 const Blog = require('../models/blog')
 const helper = require('./test_helper')
+const User = require('../models/user')
 
 const api = supertest(app)
 
@@ -167,6 +169,142 @@ describe('with initial blogs saved', () => {
     })
 
 })
+
+describe('when there is initially one user in db', () => {
+    beforeEach(async () => {
+        await User.deleteMany({})
+
+        const passwordHash = await bcrypt.hash('wonderhoy', 10)
+        const user = new User({ username: 'otori', passwordHash })
+
+        await user.save()
+    })
+
+    test('can create user with new username', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            username: 'ttenma',
+            name: 'Tsukasa Tenma',
+            password: 'COME ON!!',
+        }
+
+        await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersInDb()
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
+
+        const usernames = usersAtEnd.map(u => u.username)
+        assert(usernames.includes(newUser.username))
+    })
+
+    test('cant create users with the same username', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            username: 'otori',
+            name: 'Emu Otori',
+            password: 'wonderhoy!',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersInDb()
+        assert(result.body.error.includes('expected `username` to be unique'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+
+    test('username must be defined', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            name: 'Shizuku Hinomori',
+            password: 'shihoIsCool'
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersInDb()
+        assert(result.body.error.includes('User validation failed: username: Path `username` is required.'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+
+    })
+
+    test('username must be atleast 3 characters long', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            username: 'k',
+            name: 'Kanade Yoisaki',
+            password: '25ji'
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersInDb()
+        assert(result.body.error.startsWith('User validation failed: username:'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+
+    test('password must be defined', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            username: 'ichika',
+            name: 'ichika hoshino',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersInDb()
+        assert(result.body.error.includes('no password provided'))
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+
+    test('password must be atleast 3 characters long', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            username: 'shiho',
+            name: 'shiho hinomori',
+            password: '12',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersInDb()
+        assert(result.body.error.includes('password must be longer than 3 characters'))
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+})
+
 after(async () => {
     await mongoose.connection.close()
 })

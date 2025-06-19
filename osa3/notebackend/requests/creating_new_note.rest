@@ -1,7 +1,8 @@
 POST http://localhost:3001/api/notes
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNodW5nYSIsImlkIjoiNjg1NDMxNWFhNzQ0YzkxYTExNzJiYzMzIiwiaWF0IjoxNzUwMzQ5MzA1fQ.cjLN9et11be45Z1bdFmUL-J03jLjxPyfSIU1VyCF-zA
 
 {
-    "content": "lol",
-    "important": true
+    "content": "Chungus note no 1",
+    "important": false
 }
