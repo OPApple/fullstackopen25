@@ -52,7 +52,15 @@ describe('with initial blogs saved', () => {
         )
     })
 
-    describe('Adding new blogs ', () => {
+    describe('Adding new blogs', () => {
+        beforeEach(async () => {
+            await User.deleteMany({})
+
+            const passwordHash = await bcrypt.hash('wonderhoy', 10)
+            const user = new User({ username: 'otori', passwordHash })
+
+            await user.save()
+        })
 
         test('new blogs can be added ', async () => {
             const newBlog = {
@@ -62,9 +70,16 @@ describe('with initial blogs saved', () => {
                 likes: 999999999
             }
 
+            const login = await api
+                .post('/api/login')
+                .send({ username: 'otori', password: 'wonderhoy' })
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+
             await api
                 .post('/api/blogs')
                 .send(newBlog)
+                .set('Authorization', `Bearer ${login.body.token}`)
                 .expect(201)
                 .expect('Content-Type', /application\/json/)
 
@@ -87,9 +102,16 @@ describe('with initial blogs saved', () => {
                 url: 'www.overwatch.blizzard.com'
             }
 
+            const login = await api
+                .post('/api/login')
+                .send({ username: 'otori', password: 'wonderhoy' })
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+
             await api
                 .post('/api/blogs')
                 .send(newBlog)
+                .set('Authorization', `Bearer ${login.body.token}`)
                 .expect(201)
                 .expect('Content-Type', /application\/json/)
 
@@ -108,9 +130,16 @@ describe('with initial blogs saved', () => {
                 likes: 29
             }
 
+            const login = await api
+                .post('/api/login')
+                .send({ username: 'otori', password: 'wonderhoy' })
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+
             await api
                 .post('/api/blogs')
                 .send(newBlog)
+                .set('Authorization', `Bearer ${login.body.token}`)
                 .expect(400)
         })
 
@@ -121,10 +150,46 @@ describe('with initial blogs saved', () => {
                 likes: 29
             }
 
+            const login = await api
+                .post('/api/login')
+                .send({ username: 'otori', password: 'wonderhoy' })
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+
             await api
                 .post('/api/blogs')
                 .send(newBlog)
+                .set('Authorization', `Bearer ${login.body.token}`)
                 .expect(400)
+        })
+
+        test('blog with invalid token should not be added', async () => {
+            const newBlog = {
+                title: 'Lucio x Miku collab is coming next season',
+                author: 'A-Aron',
+                url: 'www.overwatch.blizzard.com',
+                likes: 999999999
+            }
+
+            await api
+                .post('/api/blogs')
+                .send(newBlog)
+                .set('Authorization', 'not.a.fake.token')
+                .expect(401)
+        })
+
+        test('blog with no token should not be added', async () => {
+            const newBlog = {
+                title: 'Lucio x Miku collab is coming next season',
+                author: 'A-Aron',
+                url: 'www.overwatch.blizzard.com',
+                likes: 999999999
+            }
+
+            await api
+                .post('/api/blogs')
+                .send(newBlog)
+                .expect(401)
         })
     })
 
@@ -289,7 +354,7 @@ describe('when there is initially one user in db', () => {
 
         const newUser = {
             username: 'shiho',
-            name: 'shiho hinomori',
+            name: 'Shiho Hinomori',
             password: '12',
         }
 
@@ -302,6 +367,43 @@ describe('when there is initially one user in db', () => {
         const usersAtEnd = await helper.usersInDb()
         assert(result.body.error.includes('password must be longer than 3 characters'))
         assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+})
+
+describe('login and authorization tests', () => {
+    beforeEach(async () => {
+        await User.deleteMany({})
+
+        const passwordHash = await bcrypt.hash('wonderhoy', 10)
+        const user = new User({ username: 'otori', passwordHash })
+
+        await user.save()
+    })
+
+    test('should be able to login with correct password and username', async () => {
+        await api
+            .post('/api/login')
+            .send({ username: 'otori', password: 'wonderhoy' })
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
+
+    test('should not be able to login with non existent username', async () => {
+        const result = await api
+            .post('/api/login')
+            .send({ username: 'kusanagi', password: 'wonderhoy' })
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body.error.includes('invalid username or password'))
+    })
+
+    test('should not be able to login with incorrect password', async () => {
+        const result = await api
+            .post('/api/login')
+            .send({ username: 'otori', password: 'not wonderhoy' })
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body.error.includes('invalid username or password'))
     })
 })
 
