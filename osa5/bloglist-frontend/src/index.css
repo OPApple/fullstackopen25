@@ -1,0 +1,53 @@
+body {
+    background-color: black;
+}
+
+h2 {
+    color: turquoise;
+}
+
+.blog {
+    color: whitesmoke;
+    font-family: system-ui, Oxygen;
+    font-size: large;
+}
+
+.login {
+    color: whitesmoke;
+    font-family: system-ui, Osygen;
+    margin-bottom: 50px;
+}
+
+input {
+    background-color: black;
+    color: whitesmoke;
+    border-radius: 0;
+    border-radius: 5px;
+    outline: none;
+}
+
+input:focus {
+    border: 3px solid #555
+}
+
+.welcomeText {
+    color: whitesmoke;
+    font-family: system-ui, Oxygen;
+}
+
+.error {
+    color: red;
+    font-family: system-ui, Oxygen;
+    border: 5px solid darkred;
+}
+
+.notification {
+    color: greenyellow;
+    font-family: system-ui, Oxygen;
+    border: 5px solid green;
+}
+
+.createNew {
+    color: whitesmoke;
+    font-family: system-ui, Osygen;
+}
