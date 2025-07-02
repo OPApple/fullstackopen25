@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
+import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
 const App = () => {
+  const blogFormRef = useRef()
+
   const [blogs, setBlogs]       = useState([])
   
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser]         = useState(null)
-  
-  const [newTitle, setNewTitle]   = useState('')
-  const [newAuthor, setNewAuthor] = useState('')
-  const [newUrl, setNewUrl]       = useState('')
   
   const [message, setMessage]   = useState(null)
 
@@ -71,14 +71,13 @@ const App = () => {
     location.reload()
   }
 
-  const handleCreate = async event => {
-    event.preventDefault()
-
+  const handleCreate = async (newBlog) => {
+    blogFormRef.current.toggleVisibility()
+    
     try{
-      const newBlog = { title: newTitle, author: newAuthor, url: newUrl }
       await blogService.create(newBlog)
 
-      showNotification(`${newTitle} by ${newAuthor} created!`, 3000)
+      showNotification(`${newBlog.title} by ${newBlog.author} created!`, 3000)
     } catch (exception) {
       showNotification(`error something went wrong while creating the blog.`, 3000)
     }
@@ -124,40 +123,17 @@ const App = () => {
           <p className='welcomeText'>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
         </div>
       }
-      {user && blogs.map(blog =>
+      <Togglable buttonLabel='Add New Blog' ref={blogFormRef}>
+        <BlogForm
+          createBlog={handleCreate}
+        />
+      </Togglable>
+
+      {user && blogs.sort((a, b) => b.likes - a.likes).map(blog =>
         <Blog key={blog.id} blog={blog} />
       )}
-      <h2>Create new Blog</h2>
-      <form className='createNew' onSubmit={handleCreate}>
-        <div>
-          title:
-          <input 
-            type="text" 
-            value = {newTitle}
-            name='Title'
-            onChange={({ target }) => setNewTitle(target.value)}
-          />
-        </div>
-        <div>
-          author:
-          <input 
-            type="text" 
-            value={newAuthor}
-            name='Author'
-            onChange={({ target }) => setNewAuthor(target.value)}
-          />
-        </div>
-        <div>
-          url:
-          <input 
-            type="text" 
-            value={newUrl}
-            name='Url'
-            onChange={({ target }) => setNewUrl(target.value)}
-          />
-        </div>
-        <button type='submit'>create</button>
-      </form>
+
+      
     </div>
   )
 }

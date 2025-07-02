@@ -10,6 +10,10 @@ h2 {
     color: whitesmoke;
     font-family: system-ui, Oxygen;
     font-size: large;
+    padding-top: 10px;
+    padding-left: 2px;
+    border: 1px solid whitesmoke;
+    margin-bottom: 10px;
 }
 
 .login {
