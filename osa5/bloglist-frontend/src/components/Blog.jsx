@@ -12,9 +12,10 @@ const Blog = ({ blog, handleDelete, handleLike }) => {
                 <div className='url'>
                     {blog.url}
                 </div>
-                <div className='likes'>
-                    {blog.likes} <button onClick={() => handleLike(blog)}>like</button>
+                <div data-testid='likes' className='likes'>
+                    {blog.likes}
                 </div>
+                <button onClick={() => handleLike(blog)}>like</button>
                 <div className='username'>
                     {blog.user.username}
                 </div>

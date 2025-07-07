@@ -25,6 +25,7 @@ const BlogForm = ({ createBlog }) => {
             <div>
                 title:
                 <input
+                    data-testid='title'
                     className='titleInput'
                     type="text"
                     value = {newTitle}
@@ -35,6 +36,7 @@ const BlogForm = ({ createBlog }) => {
             <div>
                 author:
                 <input
+                    data-testid='author'
                     className='authorInput'
                     type="text"
                     value={newAuthor}
@@ -45,6 +47,7 @@ const BlogForm = ({ createBlog }) => {
             <div>
                 url:
                 <input
+                    data-testid='url'
                     className='urlInput'
                     type="text"
                     value={newUrl}
@@ -52,7 +55,7 @@ const BlogForm = ({ createBlog }) => {
                     onChange={event => setNewUrl(event.target.value)}
                 />
             </div>
-            <button type='submit'>create</button>
+            <button data-testid='create' type='submit'>create</button>
         </form>
     )
 
